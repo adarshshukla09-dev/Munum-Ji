@@ -1,20 +1,21 @@
-import { pgTable,integer, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { pgTable,integer, text, timestamp, boolean, index, uuid } from "drizzle-orm/pg-core";
 export {db} from "@/db"
 import {user} from "./auth-schema"
+
 
 export const customer = pgTable("customer",{
 userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-  id: text("id").primaryKey(),
+  id: uuid().defaultRandom().primaryKey(),
   name:text("name").notNull(),
   phoneNo:text("phone_no").notNull(),
   address:text("address").notNull(),
 })
 
 export const allUdhar = pgTable("allUdhar",{
-    id: text("id").primaryKey(),
-    customerId:text("customer_id").notNull().references(()=>customer.id ,{ onDelete : "cascade"}),
+  id: uuid().defaultRandom().primaryKey(),
+    customerId:uuid("customer_id").notNull().references(()=>customer.id ,{ onDelete : "cascade"}),
     date:timestamp("date").defaultNow().notNull(),
     product:text("product_name").notNull(),
     qty:integer().notNull(),
@@ -24,7 +25,7 @@ export const allUdhar = pgTable("allUdhar",{
 })
 
 export const inventory = pgTable("inventory", {
-  id: text("id").primaryKey(),
+  id: uuid().defaultRandom().primaryKey(),
   userId: text("user_id").notNull(),
 
   productName: text("product_name").notNull(),
