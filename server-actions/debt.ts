@@ -30,7 +30,7 @@ export const addallUdhar = async ({
   }
 };
 
-export const updateProduct = async (
+export const updateUdhar = async (
   id: string,
   data: updateallUdharData
 ) => {
@@ -46,7 +46,7 @@ export const updateProduct = async (
       .limit(1);
       
       if (!existing.length) {
-        return { success: false, message: "Product not found" };
+        return { success: false, message: "Udhar not found" };
       }
 
       const current = existing[0];
@@ -78,7 +78,7 @@ export const updateProduct = async (
   }
 };
 
-export const getProduct = async (allUdharId:string)=>{
+export const getUdhar = async (allUdharId:string)=>{
   try {
     const readUser = await db.select().from(allUdhar).where(eq(allUdhar.id,allUdharId))
 
@@ -91,7 +91,7 @@ export const getProduct = async (allUdharId:string)=>{
     }
   }
 }
-export const getAllProduct = async ()=>{
+export const getAllUdhar = async ()=>{
     try {
         const readUser = await db.select().from(allUdhar);
         
@@ -104,7 +104,7 @@ export const getAllProduct = async ()=>{
     }
   }
 }
-export const deleteProduct = async (allUdharId:string)=>{
+export const deleteUdhar = async (allUdharId:string)=>{
     try {
   const deletedUser = await db.delete(allUdhar).where(eq(allUdhar.id,allUdharId))
 

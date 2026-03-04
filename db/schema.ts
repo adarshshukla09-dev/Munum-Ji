@@ -32,35 +32,3 @@ export const inventory = pgTable("inventory", {
   stock: integer("stock").notNull(),
   price: integer("price").notNull(),
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// export const function_name = async () =>{
-//     try {
-        
-//     } catch (error) {
-//         if( error instanceof Error){
-//         return { message:error.message ,status:500}
-//         }
-//     }
-// }
-// // export const function_name = async () =>{
-// //     try {
-        
-// //     } catch (error) {
-// //         if( error instanceof Error){
-// //         return { message:error.message ,status:500}
-// //         }
-// //     }
-// // }
