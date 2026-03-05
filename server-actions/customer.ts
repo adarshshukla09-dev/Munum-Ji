@@ -2,10 +2,10 @@ import { db } from "@/db";
 import { customer } from "@/db/schema";
 import { CreateCustomerInput } from "@/lib/validations";
 import { eq } from "drizzle-orm";
-import { success } from "zod";
 type updateCustomerData = Partial<CreateCustomerInput>;
+
 export const createCustomer = async ({
-  customerData,
+  customerData
 }: {
   customerData: CreateCustomerInput;
 }) => {
