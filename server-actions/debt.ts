@@ -5,16 +5,16 @@ import { eq } from "drizzle-orm";
 type updateallUdharData = Partial<CreateUdharInput>;
 
 
-export const addallUdhar = async ({
+export const addUdhar = async ({
   allUdharData,
 }: {
-  allUdharData: CreateUdharInput;
+  allUdharData: CreateUdharInput[];
 }) => {
   try {
-    const totalprice= allUdharData.price * allUdharData.qty;
-    const data={
-        ...allUdharData,totalprice,
-    }
+     const data = allUdharData.map((item) => ({
+      ...item,
+      totalprice: item.qty * item.price,
+    }));
     const newallUdhar = await db
       .insert(allUdhar)
       .values(data)
@@ -91,19 +91,7 @@ export const getUdhar = async (allUdharId:string)=>{
     }
   }
 }
-export const getAllUdhar = async ()=>{
-    try {
-        const readUser = await db.select().from(allUdhar);
-        
-        return { success:true, data:readUser}
-    } catch (error) {
-        if (error instanceof Error) {
-      return { message: error.message, success: false };
-    } else {
-        return { message: "Some internal server error", success: false };
-    }
-  }
-}
+
 export const deleteUdhar = async (allUdharId:string)=>{
     try {
   const deletedUser = await db.delete(allUdhar).where(eq(allUdhar.id,allUdharId))

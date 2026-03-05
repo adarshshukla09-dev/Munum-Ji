@@ -6,9 +6,12 @@ import { CreateInventoryInput } from "@/lib/validations";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { success } from "zod";
-type updateinventoryData = Partial<CreateInventoryInput>;
-
+type updateinventoryData =  {
+  id:string  ;
+    productName: string;
+    stock: number;
+    price: number;
+}
 export const getUser = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -40,7 +43,10 @@ export const addinventory = async (formData: FormData): Promise<void> => {
 
 export const updateinventory = async (inventoryData: updateinventoryData) => {
   try {
-    const updated = await db.update(inventory).set(inventoryData).returning();
+    const userId= await getUser();
+  
+    const updated = await db.update(inventory).set(inventoryData).where(eq(inventory.id,inventoryData.id)).returning();
+    revalidatePath("/Inventory");
 
     return {
       success: true,
