@@ -1,5 +1,4 @@
 import { pgTable,integer, text, timestamp, boolean, index, uuid } from "drizzle-orm/pg-core";
-export {db} from "@/db"
 import {user} from "./auth-schema"
 
 
@@ -13,7 +12,7 @@ userId: text("user_id")
   address:text("address").notNull(),
 })
 
-export const allUdhar = pgTable("allUdhar",{
+export const udhar = pgTable("udhar",{
   id: uuid().defaultRandom().primaryKey(),
     customerId:uuid("customer_id").notNull().references(()=>customer.id ,{ onDelete : "cascade"}),
     date:timestamp("date").defaultNow().notNull(),
@@ -26,8 +25,9 @@ export const allUdhar = pgTable("allUdhar",{
 
 export const inventory = pgTable("inventory", {
   id: uuid().defaultRandom().primaryKey(),
-  userId: text("user_id").notNull(),
-
+userId: text("user_id")
+  .notNull()
+  .references(() => user.id, { onDelete: "cascade" }),
   productName: text("product_name").notNull(),
   stock: integer("stock").notNull(),
   price: integer("price").notNull(),
