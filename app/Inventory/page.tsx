@@ -1,9 +1,20 @@
 import CreateProduct from '@/components/Inventory/CreateProduct';
 import ProductTable from '@/components/Inventory/ProductTable'
+import { auth } from '@/lib/auth';
 import { getAllProduct } from '@/server-actions/inventory'
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import React from 'react'
 
 async function page() {
+   const session = await auth.api.getSession({
+            headers:await headers()
+        })
+    
+        if(!session){
+            redirect("/register")
+        }
+        const userId = session?.user?.id;
   const allProduct = await getAllProduct();
   const data = allProduct.data ?? [];
 

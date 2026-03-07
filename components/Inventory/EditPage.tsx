@@ -1,5 +1,7 @@
-import React, { useState } from 'react'
-import { Button } from "@/components/ui/button"
+"use client"
+
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -9,72 +11,95 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Field, FieldGroup } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { addinventory, updateinventory } from '@/server-actions/inventory'
-import { Pencil } from 'lucide-react'
-
+} from "@/components/ui/dialog";
+import { Field, FieldGroup } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { updateinventory } from "@/server-actions/inventory";
+import { Pencil } from "lucide-react";
 
 type Product = {
   id: string;
-  productName: string,
-  stock: number ,
-  price: number,
-}
+  productName: string;
+  stock: number;
+  price: number;
+};
+
 type ProductProps = {
-  item: Product
-}
-function EditPage({item}:ProductProps) {
-    const [ productName,setProductName] =useState(item.productName)
-   const [stock,setStock] = useState(item.stock)
-   const [price,setPrice] = useState(item.price)
+  item: Product;
+};
 
-   const data = {
-     id:item.id,
-    productName,
-    stock,
-    price,
-   }
+function EditPage({ item }: ProductProps) {
+  const [productName, setProductName] = useState(item.productName);
+  const [stock, setStock] = useState(item.stock);
+  const [price, setPrice] = useState(item.price);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleUpdate = async () => {
+    await updateinventory({
+      id: item.id,
+      productName,
+      stock,
+      price,
+    });
+
+    setIsOpen(false);
+  };
+
   return (
-    <div>
-        <Dialog>
-     
-        <DialogTrigger asChild>
-      <Button>edit<span><Pencil/></span></Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Add Product</DialogTitle>
-            <DialogDescription>
-              edit product details with their current price and stocks 
-            </DialogDescription>
-          </DialogHeader>
-          <FieldGroup>
-            <Field>
-              <Label htmlFor="Product-Name">ProductName</Label>
-              <Input id="Product-Name" value={productName} onChange={(e)=>setProductName(e.target.value)} name="ProductName"  />
-            </Field>
-            <Field>
-              <Label htmlFor="price">Price</Label>
-              <Input value={price} onChange={(e)=>setPrice(parseInt(e.target.value))}  defaultValue={`${price}`} />
-            </Field>
-            <Field>
-              <Label htmlFor="stock">Stock</Label>
-              <Input  type="number" value={stock} onChange={(e)=>setStock(parseInt(e.target.value))} defaultValue={`${stock}`} />
-            </Field>
-          </FieldGroup>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button onSubmit={()=>updateinventory(data)} type="submit">Save changes</Button>
-          </DialogFooter>
-        </DialogContent>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          Edit <Pencil size={16} />
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Edit Product</DialogTitle>
+          <DialogDescription>
+            Edit product details with their current price and stocks
+          </DialogDescription>
+        </DialogHeader>
+
+        <FieldGroup>
+          <Field>
+            <Label>Product Name</Label>
+            <Input
+              value={productName}
+              onChange={(e) => setProductName(e.target.value)}
+            />
+          </Field>
+
+          <Field>
+            <Label>Price</Label>
+            <Input
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(Number(e.target.value))}
+            />
+          </Field>
+
+          <Field>
+            <Label>Stock</Label>
+            <Input
+              type="number"
+              value={stock}
+              onChange={(e) => setStock(Number(e.target.value))}
+            />
+          </Field>
+        </FieldGroup>
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+
+          <Button onClick={handleUpdate}>Save changes</Button>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
-    </div>
-  )
+  );
 }
 
-export default EditPage
+export default EditPage;

@@ -23,28 +23,32 @@ export const getUser = async () => {
   return session.user.id;
 };
 
-export const addinventory = async (formData: FormData): Promise<void> => {
+export const addinventory = async (formData: FormData) => {
   try {
     const userId = await getUser();
-    const productName = formData.get("ProductName") as string;
-    const price = Number(formData.get("Price"));
-    const stock = Number(formData.get("Stock"));
 
-    await db
-      .insert(inventory)
-      .values({ userId, productName, price, stock })
-      .returning();
+    const productName = formData.get("product_name") as string;
+    const price = Number(formData.get("price"));
+    const stock = Number(formData.get("stock"));
+
+    if (!productName) throw new Error("Product name missing");
+
+    await db.insert(inventory).values({
+      userId,
+      productName,
+      price,
+      stock,
+    });
 
     revalidatePath("/Inventory");
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 };
 
 export const updateinventory = async (inventoryData: updateinventoryData) => {
   try {
-    const userId= await getUser();
-  
+ 
     const updated = await db.update(inventory).set(inventoryData).where(eq(inventory.id,inventoryData.id)).returning();
     revalidatePath("/Inventory");
 
@@ -79,8 +83,9 @@ export const getProduct = async (inventoryId: string) => {
   }
 };
 export const getAllProduct = async () => {
-  try {
-    const readinventory = await db.select().from(inventory);
+   try {
+    const userId = await getUser()
+    const readinventory = await db.select().from(inventory).where(eq(inventory.userId,userId));
 
     return { success: true, data: readinventory };
   } catch (error) {
@@ -96,6 +101,7 @@ export const deleteProduct = async (inventoryId: string) => {
     const deletedinventory = await db
       .delete(inventory)
       .where(eq(inventory.id, inventoryId));
+    revalidatePath("/Inventory");
 
     return { success: true, data: deletedinventory };
   } catch (error) {
