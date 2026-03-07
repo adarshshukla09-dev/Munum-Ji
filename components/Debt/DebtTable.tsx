@@ -1,71 +1,95 @@
+"use client";
+
 import {
   Table,
   TableBody,
   TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { deleteUdhar } from "@/server-actions/debt";
 import { Button } from "../ui/button";
-import { Trash2 } from "lucide-react";
-type data=  {
-    id: string;
-    customerId: string;
-    date: Date;
-    product: string;
-    qty: number;
-    price: number;
-    totalprice: number;
-}
-type DebtTableProps = {
-  data?: data[];
+import { Pencil, Trash2 } from "lucide-react";
+import CreateDebt from "./CreateDebt";
+import { toast } from "sonner";
+import { useState } from "react";
+import EditDebts from "./EditDebts";
+
+type Debt = {
+  id: string;
+  customerId: string;
+  date: Date;
+  product: string;
+  qty: number;
+  price: number;
+  totalprice: number;
 };
 
-function DebtTable({ data }: DebtTableProps) {
-      return (
-    <div className="m-4 mt-6 max-w-7xl  border-2 p-3 rounded-3xl">
-      <Table>
+type DebtTableProps = {
+  data?: Debt[];
+  customerId: string;
+};
+
+function DebtTable({ data, customerId }: DebtTableProps) {
+  const [isEdit,setIsEdit] =useState<boolean>(false)
+  return (
+
+    <div className="w-full overflow-x-auto">
+      <div className="float-right mb-4">
+        <CreateDebt customerId={customerId} />
+      </div>
+
+      <Table className="w-full">
         <TableCaption>A list of your recent products.</TableCaption>
 
-        <TableHeader className="font-bold justify-between">
+        <TableHeader>
           <TableRow>
-            <TableHead >date</TableHead>
-            <TableHead >product</TableHead>
-            <TableHead>qty</TableHead>
-            <TableHead>price</TableHead>
-            <TableHead>totalprice</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Product</TableHead>
+            <TableHead>Qty</TableHead>
+            <TableHead>Price</TableHead>
+            <TableHead>Total Price</TableHead>
+            <TableHead>Action</TableHead>
           </TableRow>
         </TableHeader>
 
         <TableBody>
-          {data && data.map((item) => ( 
+          {data?.map((item) => (
             <TableRow key={item.id} className="hover:bg-gray-200">
-             
-              <TableCell className="font-medium" >{item.date.toLocaleDateString()}</TableCell>
+              <TableCell className="font-medium">
+                {new Date(item.date).toLocaleDateString()}
+              </TableCell>
+
               <TableCell>{item.product}</TableCell>
-              <TableCell>${item.qty}</TableCell>
-              <TableCell>${item.price}</TableCell>
-              <TableCell>${item.totalprice}</TableCell>
-              <TableCell className="flex gap-2">
-               <span>
-                   <Button onClick={()=>{deleteUdhar(item.id)} }>
-                    <Trash2 />
-                  </Button>
-                </span>
-              {/* < item={item}/> */}
+
+              <TableCell>{item.qty}</TableCell>
+
+              <TableCell>₹{item.price}</TableCell>
+
+              <TableCell>₹{item.totalprice}</TableCell>
+
+              <TableCell className="flex m-2">
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={async () => {
+                    await deleteUdhar(item.id);
+                    toast.success(`deleted ${item.product}`)
+                  }}
+                >
+                   
+                  <Trash2 size={16} />
+                </Button>
+                <EditDebts data={item}/>
               </TableCell>
             </TableRow>
           ))}
-                     
         </TableBody>
-
-       
       </Table>
-    </div>
-  )
+     </div>
+  );
 }
 
-export default DebtTable
+export default DebtTable;

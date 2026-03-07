@@ -1,22 +1,48 @@
+"use server"
+
 import { db } from "@/db";
-import { allUdhar } from "@/db/schema";
+import { udhar } from "@/db/schema";
+import { auth } from "@/lib/auth";
 import { CreateUdharInput } from "@/lib/validations";
 import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
+import { success } from "zod";
 type updateallUdharData = Partial<CreateUdharInput>;
 
+type debt ={
+    customerId: string;
+    product: string;
+    qty: number;
+    price: number;
+    totalprice: number;
+}
 
+export const getUser = async () => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+  return session.user.id;
+};
+ 
 export const addUdhar = async ({
   allUdharData,
 }: {
-  allUdharData: CreateUdharInput[];
+  allUdharData: debt;
 }) => {
   try {
-     const data = allUdharData.map((item) => ({
-      ...item,
-      totalprice: item.qty * item.price,
-    }));
+    console.log(allUdharData)
+    const date = new Date()
+     const data ={
+      ...allUdharData,
+      date,
+      totalprice: allUdharData.qty * allUdharData.price,
+    };
     const newallUdhar = await db
-      .insert(allUdhar)
+      .insert(udhar)
       .values(data)
       .returning();
 
@@ -31,37 +57,31 @@ export const addUdhar = async ({
 };
 
 export const updateUdhar = async (
-  id: string,
   data: updateallUdharData
 ) => {
   try {
-    // Recalculate totalprice if qty or price is updated
-    let totalprice
-    if (data.qty !== undefined || data.price !== undefined) {
-      // First fetch existing record
+    if(!data.id){
+return {success:false , message :"id is un defined"}
+    }
+    let  udharId:string;
+    udharId = data?.id;
+    if (udharId) {
       const existing = await db
       .select()
-      .from(allUdhar)
-      .where(eq(allUdhar.id, id))
+      .from(udhar)
+      .where(eq(udhar.id, data.id))
       .limit(1);
       
       if (!existing.length) {
         return { success: false, message: "Udhar not found" };
       }
 
-      const current = existing[0];
       
-      const qty = data.qty ?? current.qty;
-      const price = data.price ?? current.price;
-      
- totalprice = qty *price;
-    }
-    let updatedData = { ...data,totalprice };
-
+          }
     const updated = await db
-      .update(allUdhar)
-      .set(updatedData)
-      .where(eq(allUdhar.id, id))
+      .update(udhar)
+      .set(data)
+      .where(eq(udhar.id,udharId))
       .returning();
       
       return {
@@ -78,25 +98,27 @@ export const updateUdhar = async (
   }
 };
 
-export const getUdhar = async (allUdharId:string)=>{
+export const getUdhar = async (customerId: string) => {
   try {
-    const readUser = await db.select().from(allUdhar).where(eq(allUdhar.id,allUdharId))
+    const readUser = await db
+      .select()
+      .from(udhar)
+      .where(eq(udhar.customerId, customerId));
 
-  return { success:true, data:readUser}
-    } catch (error) {
+    return { success: true, data: readUser };
+  } catch (error) {
     if (error instanceof Error) {
       return { message: error.message, success: false };
     } else {
       return { message: "Some internal server error", success: false };
     }
   }
-}
-
+};
 export const deleteUdhar = async (allUdharId:string)=>{
     try {
-  const deletedUser = await db.delete(allUdhar).where(eq(allUdhar.id,allUdharId))
+  const deletedUser = await db.delete(udhar).where(eq(udhar.id,allUdharId))
 
-  return { success:true, data:deletedUser}
+  return { success:true,message:"deleted sucessfully"}
     } catch (error) {
     if (error instanceof Error) {
       return { message: error.message, success: false };

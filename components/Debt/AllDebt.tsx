@@ -1,63 +1,79 @@
-import React, { useState } from 'react'
-import { Button } from "@/components/ui/button"
+"use client";
+
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { PlusCircle } from 'lucide-react'
-import DebtTable from './DebtTable'
-import { getUdhar } from '@/server-actions/debt'
+} from "@/components/ui/dialog";
+import { ReceiptText } from "lucide-react";
+import DebtTable from "./DebtTable";
+import { getUdhar } from "@/server-actions/debt";
 
-type data=  {
-    id: string;
-    customerId: string;
-    date: Date;
-    product: string;
-    qty: number;
-    price: number;
-    totalprice: number;
-}
-async function AllDebt(CustomerId:string) {
-    const getAll = await getUdhar(CustomerId);
-    const data = getAll?.data;
+type Debt = {
+  id: string;
+  customerId: string;
+  date: Date;
+  product: string;
+  qty: number;
+  price: number;
+  totalprice: number;
+};
+
+type Props = {
+  customerId: string;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+};
+
+export default function AllDebt({ customerId, open, setOpen }: Props) {
+  const [data, setData] = useState<Debt[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDebt = async () => {
+      setLoading(true);
+
+      const res = await getUdhar(customerId);
+      const debts = res?.data || [];
+
+      setData(debts);
+      console.log("Fetched debts:", debts);
+
+      setLoading(false);
+    };
+
+    if (customerId) {
+      fetchDebt();
+    }
+  }, [customerId]);
+
   return (
-    <div>
-        <Dialog>
-     
-        <DialogTrigger asChild>
-      <Button>Add<span><PlusCircle/></span></Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Add more</DialogTitle>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="flex flex-row items-center gap-2">
+          <ReceiptText className="text-gray-600" size={22} />
+
+          <div>
+            <DialogTitle>Customer Debt</DialogTitle>
+
             <DialogDescription>
-          More debt 
+              All udhar records for customer:{" "}
+              <span className="font-semibold">{customerId}</span>
             </DialogDescription>
-          </DialogHeader>
+          </div>
+        </DialogHeader>
 
-        
-       <DebtTable data={data}/>
-          
-          {/* <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button onClick={()=> createCustomer({
-      customerData
-    })}></Button>
-          </DialogFooter> */}
-        </DialogContent>
-
+        <div className="mt-4">
+          {loading ? (
+            <p className="text-sm text-gray-500">Loading debts...</p>
+          ) : (
+            <DebtTable data={data} customerId={customerId} />
+          )}
+        </div>
+      </DialogContent>
     </Dialog>
-    </div>
-  )
+  );
 }
-
-
-export default AllDebt;

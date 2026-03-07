@@ -12,71 +12,67 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Field, FieldGroup } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Pencil, PlusCircle } from "lucide-react";
-import { Field, FieldGroup } from "../ui/field";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import { updateUdhar } from "@/server-actions/debt";
-type debt = {
-  id: string;
-  customerId: string;
-  date: Date;
-  product: string;
-  qty: number;
-  price: number;
-  totalprice: number;
-};
-type debtProps = {
-  data?: debt;
-};
-function EditDebts({ data }: debtProps) {
-  const [date, setDate] = useState(
-    data?.date ? new Date(data.date).toISOString().split("T")[0] : "",
-  );
+import { addUdhar } from "@/server-actions/debt";
+import { toast } from "sonner";
 
-  const [product, setProduct] = useState(data?.product);
-  const [qty, setQty] = useState(data?.qty);
-  const [price, setPrice] = useState(data?.price);
-  const [totalprice, setTotalPrice] = useState(data?.totalprice);
-  const [isOpen, setIsOpen] = useState(false);
+function CreateDebt({ customerId }: { customerId: string }) {
+  const [product, setProduct] = useState<string>();
+  const [qty, setQty] = useState<number>(1);
+  const [price, setPrice] = useState<number>(10);
+  const [totalprice, setTotalPrice] = useState<number>();
+    const [isOpen, setIsOpen] = useState(false);
+  
+console.log("customer id is ",customerId)
   useEffect(() => {
     if (price !== undefined && qty !== undefined) {
       setTotalPrice(qty * price);
     }
   }, [qty, price]);
-
-const handleEdit = async () => {
-  if (!data?.id) return;
-
-  await updateUdhar({
-    id: data.id,
-    date: new Date(date),
+  const data = {
     product,
     qty,
     price,
     totalprice,
-  });
+    customerId,
+  };
 
-  setIsOpen(false);
+const handleCreate = async () => {
+  await addUdhar({
+    allUdharData: {
+      customerId,
+      product: product!,
+      qty,
+      price,
+      totalprice: qty * price,
+    },
+  });
+      setIsOpen(false);
+toast.success("new one added successfully")
 };
+
   return (
     <div>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button>
-            edit
+            Create debt
             <span>
               <Pencil />
             </span>
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="max-w-7xl w-full">
           <DialogHeader>
             <DialogTitle>Add Customer</DialogTitle>
-            <DialogDescription>edit debts details with their</DialogDescription>
+            <DialogDescription>
+              create debts details with their
+            </DialogDescription>
           </DialogHeader>
-
           <FieldGroup>
             <Field>
               <Label htmlFor="product">product</Label>
@@ -101,14 +97,7 @@ const handleEdit = async () => {
                 onChange={(e) => setPrice(parseInt(e.target.value))}
               />
             </Field>
-            <Field>
-              <Label htmlFor="date">date</Label>
-              <Input
-                value={date}
-                type="date"
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </Field>
+
             <Field>
               <Label>Total</Label>
               <Input value={totalprice ?? 0} disabled />
@@ -118,11 +107,7 @@ const handleEdit = async () => {
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button
-              onClick={
-               handleEdit
-              }
-            ></Button>
+            <Button onClick={handleCreate}>create new</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -130,4 +115,4 @@ const handleEdit = async () => {
   );
 }
 
-export default EditDebts;
+export default CreateDebt;

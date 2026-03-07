@@ -1,6 +1,11 @@
+import CustomerTable from '@/components/Customer/CustomerTable'
+import { getAllUser } from '@/server-actions/customer'
 import React from 'react'
 
-function page() {
+async function page() {
+  const allUser = await getAllUser();
+  const data = allUser?.data;
+
   return (
    <div className="min-h-screen bg-gray-50 pt-28 pb-16">
       <div className="max-w-7xl mx-auto px-6">
@@ -23,7 +28,7 @@ function page() {
 
         {/* Table Card */}
         <div className="bg-white shadow-md rounded-2xl border border-gray-100 p-6">
-          {/* <ProductTable data={data} /> */}
+{data && <CustomerTable data={data}/>}
         </div>
 
       </div>

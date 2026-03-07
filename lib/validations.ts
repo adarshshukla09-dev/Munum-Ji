@@ -1,12 +1,17 @@
 import { z } from "zod"
 
 export const customerSchema = z.object({
+  
   name: z.string().trim().min(5),
   phoneNo: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
   address: z.string().trim().min(5),
 })
 
 export const allUdharSchema = z.object({
+   id: z.string().trim().min(1),
+    customerId: z.string().trim().min(1),
+
+    totalprice:z.number().int().positive(),
   date: z.coerce.date(),
   product: z.string().trim().min(1),
   qty: z.number().int().positive(),

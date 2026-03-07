@@ -1,3 +1,4 @@
+"use client"
 import React, { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import {
@@ -27,20 +28,25 @@ type Customer = {
 type CustomerProps = {
   item: Customer
 }
-function CreateCustomer({item}:CustomerProps) {
+function CreateCustomer() {
     const [ name,setName] =useState('')
    const [phoneNo,setPhoneNo] = useState("")
    const [address,setAddress] = useState("")
-
+  const [isOpen, setIsOpen] = useState(false);
+ const handleSubmit = async()=>{
+const user = await createCustomer({
+      customerData
+    })
+  setIsOpen(false)
+ }
    const customerData = {
-    userId:item.userId,
     name,
     phoneNo,
     address,
    }
   return (
     <div>
-        <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
      
         <DialogTrigger asChild>
       <Button>Add<span><PlusCircle/></span></Button>
@@ -65,7 +71,7 @@ function CreateCustomer({item}:CustomerProps) {
               <Input value={phoneNo} onChange={(e)=>setPhoneNo((e.target.value))}   />
             </Field>
             <Field>
-              <Label htmlFor="stock">Stock</Label>
+              <Label htmlFor="address">Adress</Label>
               <Textarea cols={7} rows={3} value={address} onChange={(e)=>setAddress((e.target.value))}  />
             </Field>
           </FieldGroup>
@@ -73,9 +79,7 @@ function CreateCustomer({item}:CustomerProps) {
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button onClick={()=> createCustomer({
-      customerData
-    })}></Button>
+            <Button onClick={handleSubmit}>create </Button>
           </DialogFooter>
         </DialogContent>
 

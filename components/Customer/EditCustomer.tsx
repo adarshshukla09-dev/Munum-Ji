@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import {
@@ -27,9 +29,9 @@ type CustomerProps = {
   item: Customer
 }
 function EditCustomer({item}:CustomerProps) {
-    const [ name,setName] =useState("")
-   const [phoneNo,setPhoneNo] = useState("")
-   const [address,setAddress] = useState("")
+    const [ name,setName] =useState(item.name)
+   const [phoneNo,setPhoneNo] = useState(item.phoneNo)
+   const [address,setAddress] = useState(item.address)
 
    const data = {
      id:item.id,
