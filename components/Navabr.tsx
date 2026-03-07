@@ -1,4 +1,4 @@
-import React from "react";
+"use client"
 import { LayoutDashboard, Settings, Bell } from "lucide-react"; // Using Lucide for consistent iconography
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -11,7 +11,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
 const Navbar = () => {
+   const { data } = authClient.useSession();
+  const user = data?.user;
+  
+  const userImage = user?.image || "https://github.com/shadcn.png"
   return (
     <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[90%] border-2 rounded-full  max-w-5xl">
       {/* Main Glass Container */}
@@ -61,15 +66,15 @@ const Navbar = () => {
             <Bell className="h-4 w-4" />
           </Button>
 
-          <DropdownMenu>
+          {  user &&     <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 className="relative h-9 w-9 rounded-full p-0 ring-2 ring-primary/10 hover:ring-primary/30 transition-all"
               >
-                <Avatar className="h-9 w-9">
+         <Avatar className="h-9 w-9">
                   <AvatarImage
-                    src="https://github.com/shadcn.png"
+                    src={userImage}
                     alt="@shadcn"
                   />
                   <AvatarFallback>JD</AvatarFallback>
@@ -94,11 +99,11 @@ const Navbar = () => {
               <DropdownMenuItem>Billing</DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
-                Log out
+              <DropdownMenuItem  className="text-destructive">
+             <Button onClick={() => authClient.signOut()}>   Log out</Button>
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu>}
         </div>
       </div>
     </nav>
