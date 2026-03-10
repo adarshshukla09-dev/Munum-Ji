@@ -30,6 +30,7 @@ type CustomerProps = {
 }
 function CreateCustomer() {
     const [ name,setName] =useState('')
+    const [ ledger,setLedger] =useState<number>(0)
    const [phoneNo,setPhoneNo] = useState("")
    const [address,setAddress] = useState("")
   const [isOpen, setIsOpen] = useState(false);
@@ -38,11 +39,13 @@ const user = await createCustomer({
       customerData
     })
   setIsOpen(false)
+
  }
    const customerData = {
     name,
     phoneNo,
     address,
+    ledger,
    }
   return (
     <div>
@@ -69,6 +72,12 @@ const user = await createCustomer({
             <Field>
               <Label htmlFor="phoneNo">phoneNo</Label>
               <Input value={phoneNo} onChange={(e)=>setPhoneNo((e.target.value))}   />
+            </Field>
+            <Field>
+              <Label htmlFor="ledger">ledger</Label>
+               <div className="flex items-center gap-1">
+                ₹<Input value={ledger} onChange={(e)=>setLedger(Number(e.target.value))}   />
+              </div>
             </Field>
             <Field>
               <Label htmlFor="address">Adress</Label>

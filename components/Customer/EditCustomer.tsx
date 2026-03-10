@@ -24,6 +24,7 @@ type Customer = {
     name: string;
     phoneNo: string;
     address: string;
+    ledger:number;
 }
 type CustomerProps = {
   item: Customer
@@ -32,10 +33,12 @@ function EditCustomer({item}:CustomerProps) {
     const [ name,setName] =useState(item.name)
    const [phoneNo,setPhoneNo] = useState(item.phoneNo)
    const [address,setAddress] = useState(item.address)
-
+   const [ ledger,setLedger] =useState<number>(item.ledger)
+    
    const data = {
      id:item.id,
    name,
+   ledger,
    phoneNo,
    address,
    }
@@ -62,6 +65,12 @@ function EditCustomer({item}:CustomerProps) {
               <Label htmlFor="phoneNo">phoneNo</Label>
               <Input value={phoneNo} onChange={(e)=>setPhoneNo((e.target.value))}  defaultValue={`${phoneNo}`} />
             </Field>
+             <Field>
+                          <Label htmlFor="ledger">ledger</Label>
+                           <div className="flex items-center gap-1">
+                            ₹<Input value={ledger} onChange={(e)=>setLedger(Number(e.target.value))}   />
+                          </div>
+                        </Field>
             <Field>
               <Label htmlFor="address">address</Label>
               <Textarea cols={7} rows={3}  value={address} onChange={(e)=>setAddress((e.target.value))} defaultValue={`${address}`} />
@@ -71,7 +80,7 @@ function EditCustomer({item}:CustomerProps) {
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button onSubmit={()=>updateUser(data,item.id)} type="submit">Save changes</Button>
+            <Button onClick={()=>updateUser(data,item.id)} type="submit">Save changes</Button>
           </DialogFooter>
         </DialogContent>
     </Dialog>

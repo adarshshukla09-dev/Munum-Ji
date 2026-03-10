@@ -23,6 +23,7 @@ type CustomerInput = {
   name: string;
   phoneNo: string;
   address: string;
+  ledger:number;
 };
 
 type Props = {
@@ -61,6 +62,7 @@ function CustomerTable({ data }: Props) {
               <TableHead>Name</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Address</TableHead>
+              <TableHead>ledger</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -84,6 +86,7 @@ function CustomerTable({ data }: Props) {
                 <TableCell className="max-w-50 truncate">
                   {item.address}
                 </TableCell>
+                <TableCell className="font-bold text-red-500">₹{item.ledger}</TableCell>
 
                 <TableCell className="flex justify-end gap-2">
                   
