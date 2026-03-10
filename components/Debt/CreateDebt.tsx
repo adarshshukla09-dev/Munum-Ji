@@ -21,10 +21,10 @@ import { addUdhar } from "@/server-actions/debt";
 import { toast } from "sonner";
 
 function CreateDebt({ customerId }: { customerId: string }) {
-  const [product, setProduct] = useState<string>();
+  const [product, setProduct] = useState<string>("");
   const [qty, setQty] = useState<number>(1);
   const [price, setPrice] = useState<number>(10);
-  const [totalprice, setTotalPrice] = useState<number>();
+  const [totalprice, setTotalPrice] = useState<number>(0);
     const [isOpen, setIsOpen] = useState(false);
   
 console.log("customer id is ",customerId)
@@ -33,13 +33,6 @@ console.log("customer id is ",customerId)
       setTotalPrice(qty * price);
     }
   }, [qty, price]);
-  const data = {
-    product,
-    qty,
-    price,
-    totalprice,
-    customerId,
-  };
 
 const handleCreate = async () => {
   await addUdhar({
@@ -56,7 +49,7 @@ toast.success("new one added successfully")
 };
 
   return (
-    <div>
+    <div className="max-w-7xl h-full">
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button>
@@ -87,14 +80,14 @@ toast.success("new one added successfully")
               <Label htmlFor="qty">qty</Label>
               <Input
                 value={qty}
-                onChange={(e) => setQty(parseInt(e.target.value))}
+                onChange={(e) => setQty(Number(e.target.value))}
               />
             </Field>
             <Field>
               <Label htmlFor="price">price</Label>
               <Input
                 value={price}
-                onChange={(e) => setPrice(parseInt(e.target.value))}
+                onChange={(e) => setPrice(Number(e.target.value))}
               />
             </Field>
 

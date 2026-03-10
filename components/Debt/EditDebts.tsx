@@ -34,7 +34,7 @@ function EditDebts({ data }: debtProps) {
   const [date, setDate] = useState(
     data?.date ? new Date(data.date).toISOString().split("T")[0] : "",
   );
-
+  const[prev,setPrev] = useState(data?.totalprice)
   const [product, setProduct] = useState(data?.product);
   const [qty, setQty] = useState(data?.qty);
   const [price, setPrice] = useState(data?.price);
@@ -49,14 +49,22 @@ function EditDebts({ data }: debtProps) {
 const handleEdit = async () => {
   if (!data?.id) return;
 
+  const handleEdit = async () => {
+  if (!data?.id) return;
+
   await updateUdhar({
     id: data.id,
+    customerId: data.customerId,
     date: new Date(date),
     product,
     qty,
     price,
     totalprice,
+    prev: prev ?? 0,
   });
+
+  setIsOpen(false);
+};
 
   setIsOpen(false);
 };
