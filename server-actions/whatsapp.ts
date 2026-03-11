@@ -1,9 +1,9 @@
 "use server"
 import { db } from "@/db";
-import { log } from "console";
-import { redirect } from "next/navigation";
+import Stripe from "stripe";
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-export const directMessage = async (customerId: string) => {
+export const directMessage = async (customerId: string,payableLink:string) => {
   try {
     console.log("start")
     const customer = await db.query.customer.findFirst({
@@ -13,10 +13,9 @@ export const directMessage = async (customerId: string) => {
     if (!customer) {
       return { success: false, message: "Customer not found" };
     }
-    const message = `Hi, this is a reminder that you have a debt of ₹${customer.ledger}. Kindly pay.`;
+    const message = `Hi, this is a reminder that you have a debt of ₹${customer.ledger}. Kindly pay by visiting shop or through this link ${payableLink}`;
     const phone = customer.phoneNo?.replace(/\D/g, "");
     console.log("end");
-    // console.log(link)
 
     const url = `https://wa.me/91${phone}?text=${encodeURIComponent(message)}`;
 
@@ -28,17 +27,47 @@ error instanceof Error? console.error(error.message) : console.log(" went wrong"
 };
 
 
-export const getReminderLinks = async () => {
+
+
+export const createAllPaymentLinks = async () => {
   const customers = await db.query.customer.findMany();
 
-  const links = customers
-    .filter((c) => c.ledger > 0)
-    .map((c) => {
-      const phone = c.phoneNo?.replace(/\D/g, "");
-      const message = `Hi ${c.name}, reminder that you have a debt of ₹${c.ledger}. Kindly pay.`;
+  const result = [];
 
-      return `https://wa.me/91${phone}?text=${encodeURIComponent(message)}`;
+  for (const c of customers) {
+    if (c.ledger <= 0) continue;
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "inr",
+            product_data: {
+              name: `Debt payment for ${c.name}`,
+            },
+            unit_amount: c.ledger * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `${process.env.NEXT_BASE_URL}/success?customer_id=${c.id}`,
+      cancel_url: `${process.env.NEXT_BASE_URL}/cancel`,
     });
 
-  return links;
+    const phone = c.phoneNo?.replace(/\D/g, "");
+
+    const message = `Hi ${c.name}, reminder that you have a debt of ₹${c.ledger}. Kindly pay here: ${session.url}`;
+
+    const whatsappLink = `https://wa.me/91${phone}?text=${encodeURIComponent(message)}`;
+
+    result.push({
+      name: c.name,
+      phone,
+      whatsappLink,
+    });
+  }
+
+  return result;
 };
