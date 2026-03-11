@@ -43,15 +43,7 @@ export default function AllDebt({ customerId, open, setOpen }: Props) {
     window.open(res.url, "_blank");
   }
 };
-const sendBulkReminder = async () => {
-  const links = await getReminderLinks();
 
-  links.forEach((link, i) => {
-    setTimeout(() => {
-      window.open(link, "_blank");
-    }, i * 800); // delay prevents popup blocking
-  });
-};
   useEffect(() => {
     const fetchDebt = async () => {
       setLoading(true);
@@ -95,15 +87,17 @@ const sendBulkReminder = async () => {
               <DebtTable data={data} customerId={customerId} />
             </div>
           )}
-          <div className="flex justify-end m-4">
-            <Button
-              onClick={sendBulkReminder}
-              className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2"
-            >
-              <FaWhatsapp size={18} />
-              Send WhatsApp
-            </Button>
-          </div>
+        <div className="flex justify-end m-4 gap-2">
+  <Button
+    onClick={handleMessage}
+    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2"
+  >
+    <FaWhatsapp size={18} />
+    Send WhatsApp
+  </Button>
+
+ 
+</div>
         </div>
       </DialogContent>
     </Dialog>

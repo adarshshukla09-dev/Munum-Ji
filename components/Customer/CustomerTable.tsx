@@ -17,6 +17,9 @@ import { deleteUser } from "@/server-actions/customer";
 import CreateCustomer from "./CreateCustomer";
 import AllDebt from "../Debt/AllDebt";
 import { useState } from "react";
+import { FaWhatsapp } from "react-icons/fa";
+import { getReminderLinks } from "@/server-actions/whatsapp";
+import { toast } from "sonner";
 
 type CustomerInput = {
   id: string;
@@ -40,15 +43,40 @@ function CustomerTable({ data }: Props) {
   const handleDelete = async (id: string) => {
     await deleteUser(id);
   };
+const sendBulkReminder = async () => {
+  const links = await getReminderLinks();
 
+  if (!links.length) {
+    toast.error("No customers with debt");
+    return;
+  }
+
+  toast.success(`Opening ${links.length} WhatsApp chats`);
+
+  links.forEach((link, i) => {
+    setTimeout(() => {
+      window.open(link, "_blank");
+    }, i * 1500); // safer delay
+  });
+};
   return (
     <div className="m-6 max-w-7xl rounded-2xl border bg-white shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between border-b p-5">
-        <h2 className="text-xl font-semibold">Customers</h2>
-        <CreateCustomer />
-      </div>
+    <div className="flex items-center border-b p-5">
+  <h2 className="text-xl font-semibold">Customers</h2>
 
+  <div className="ml-auto flex gap-3">
+    <CreateCustomer />
+
+    <Button
+      onClick={sendBulkReminder}
+      className="flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white font-semibold px-4 py-2"
+    >
+      <FaWhatsapp size={18} />
+      Send All Reminders
+    </Button>
+  </div>
+</div>
       {/* Table */}
       <div className="p-4">
         <Table>
