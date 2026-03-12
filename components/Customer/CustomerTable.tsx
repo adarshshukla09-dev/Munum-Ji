@@ -11,15 +11,15 @@ import {
 } from "@/components/ui/table";
 
 import { Button } from "../ui/button";
-import { Trash2, Eye } from "lucide-react";
+import { Trash2, Eye, PlusCircle } from "lucide-react";
 import EditCustomer from "./EditCustomer";
 import { deleteUser } from "@/server-actions/customer";
 import CreateCustomer from "./CreateCustomer";
 import AllDebt from "../Debt/AllDebt";
 import { useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
-import { getReminderLinks } from "@/server-actions/whatsapp";
 import { toast } from "sonner";
+import { createAllPaymentLinks } from "@/server-actions/whatsapp";
 
 type CustomerInput = {
   id: string;
@@ -44,7 +44,7 @@ function CustomerTable({ data }: Props) {
     await deleteUser(id);
   };
 const sendBulkReminder = async () => {
-  const links = await getReminderLinks();
+  const links = await createAllPaymentLinks();
 
   if (!links.length) {
     toast.error("No customers with debt");
@@ -55,7 +55,7 @@ const sendBulkReminder = async () => {
 
   links.forEach((link, i) => {
     setTimeout(() => {
-      window.open(link, "_blank");
+      window.open(link.whatsappLink, "_blank");
     }, i * 1500); // safer delay
   });
 };
@@ -124,7 +124,8 @@ const sendBulkReminder = async () => {
                     size="icon"
                     onClick={() => handleViewDebt(item.id)}
                   >
-                    <Eye size={18} />
+                    <PlusCircle size={18} />
+                
                   </Button>
 
                   {/* Edit */}

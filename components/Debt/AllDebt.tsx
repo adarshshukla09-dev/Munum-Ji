@@ -13,7 +13,7 @@ import DebtTable from "./DebtTable";
 import { getUdhar } from "@/server-actions/debt";
 import { FaWhatsapp } from "react-icons/fa";
 import { Button } from "../ui/button";
-import { directMessage, getReminderLinks } from "@/server-actions/whatsapp";
+import { directMessage } from "@/server-actions/whatsapp";
 import { toast } from "sonner";
 
 type Debt = {
@@ -37,7 +37,19 @@ export default function AllDebt({ customerId, open, setOpen }: Props) {
   const [loading, setLoading] = useState(true);
 
  const handleMessage = async () => {
-  const res = await directMessage(customerId);
+
+  const res2 =  await fetch('/api/checkout', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+     customerId,
+    }),
+  }) 
+ const data = await res2.json();   
+  const payableLink = data.url;     
+  const res = await directMessage(customerId,payableLink);
 
   if (res?.success && res.url) {
     window.open(res.url, "_blank");
@@ -53,7 +65,7 @@ export default function AllDebt({ customerId, open, setOpen }: Props) {
 
       setData(debts);
       console.log("Fetched debts:", debts);
-
+      
       setLoading(false);
     };
 
@@ -63,20 +75,25 @@ export default function AllDebt({ customerId, open, setOpen }: Props) {
   }, [customerId]);
 
   return (
+
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-7xl max-h-[90vh]  overflow-hidden">
-        <DialogHeader className="flex flex-row items-center gap-2">
-          <ReceiptText className="text-gray-600" size={22} />
+      <DialogContent className="max-w-7xl w-full max-h-[90vh]  overflow-hidden">
+       <DialogHeader className="flex flex-row items-center justify-between border-b pb-3">
 
-          <div>
-            <DialogTitle>Customer Debt</DialogTitle>
+<div className="flex items-center gap-2">
+  <ReceiptText size={20} />
+  <DialogTitle>Customer Ledger</DialogTitle>
+</div>
 
-            <DialogDescription>
-              All udhar records for customer:
-              <span className="font-semibold">{customerId}</span>
-            </DialogDescription>
-          </div>
-        </DialogHeader>
+<Button
+  onClick={handleMessage}
+  className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+>
+  <FaWhatsapp />
+  Send Reminder
+</Button>
+
+</DialogHeader>
         <div className="mt-4">
           {loading ? (
             <div className="flex justify-center">
@@ -96,7 +113,6 @@ export default function AllDebt({ customerId, open, setOpen }: Props) {
     Send WhatsApp
   </Button>
 
- 
 </div>
         </div>
       </DialogContent>

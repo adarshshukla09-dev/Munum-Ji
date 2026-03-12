@@ -27,7 +27,7 @@ async function page() {
         </div>
 
         {/* Table Card */}
-        <div className="bg-white shadow-md rounded-2xl border border-gray-100 p-6">
+        <div className="bg-white shadow-md rounded-2xl border  p-6">
 {data && <CustomerTable data={data}/>}
         </div>
 

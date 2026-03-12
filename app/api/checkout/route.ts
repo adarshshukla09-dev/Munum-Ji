@@ -11,8 +11,11 @@ export async function POST(req: Request) {
 const customer = await db.query.customer.findFirst({
   where: (customer, { eq }) => eq(customer.id, customerId),
 });
-if(!customer){
-    return {success:false , message:"invaild customerId" }
+if (!customer) {
+  return NextResponse.json(
+    { success: false, message: "invalid customerId" },
+    { status: 400 }
+  );
 }
  const ledger = customer?.ledger
 const session = await stripe.checkout.sessions.create({

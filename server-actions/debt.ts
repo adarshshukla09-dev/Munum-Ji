@@ -1,19 +1,18 @@
 "use server";
 
 import { db } from "@/db";
-import { customer, udhar } from "@/db/schema";
+import { customer, inventory, udhar } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 type UdharInput = {
   id: string;
   customerId: string;
-  totalprice?: number;
-  date?: Date;
-  product?: string;
+  inventoryId: string;
   qty?: number;
   price?: number;
-  prev: number;
+  totalprice?: number;
+  date?: Date;
 };
 
 type debt = {
@@ -21,6 +20,7 @@ type debt = {
   product: string;
   qty: number;
   price: number;
+  inventoryId:string;
   totalprice: number;
 };
 
@@ -37,84 +37,105 @@ export const getUser = async () => {
 
 export const addUdhar = async ({ allUdharData }: { allUdharData: debt }) => {
   try {
-    console.log(allUdharData);
-    const date = new Date();
-    const totalprice = allUdharData.qty * allUdharData.price;
-    const data = {
-      ...allUdharData,
-      date,
-      totalprice,
-    };
-    const newallUdhar = await db.insert(udhar).values(data).returning();
-    const debt = await db.query.customer.findFirst({
-      where: (customer, { eq }) => eq(customer.id, allUdharData.customerId),
-    });
-    if (!debt) {
-      return { success: false, Message: "can't find legder" };
-    }
-    const newLedger = debt.ledger + totalprice;
-    await db
-      .update(customer)
-      .set({ ledger: newLedger })
-      .where(eq(customer.id, allUdharData.customerId));
 
-    return { success: true, data: newallUdhar };
+    const result = await db.transaction(async (tx) => {
+
+      const totalprice = allUdharData.qty * allUdharData.price
+ const item = await tx.query.inventory.findFirst({
+          where: (i,{ eq }) => eq(i.id, allUdharData.inventoryId)
+
+ })
+      const newUdhar = await tx.insert(udhar)
+        .values({
+          ...allUdharData,
+          productName:item?.productName,
+          totalprice,
+          date: new Date()
+        })
+        .returning()
+
+      const cust = await tx.query.customer.findFirst({
+        where: (c, { eq }) => eq(c.id, allUdharData.customerId)
+      })
+
+      if (!cust) throw new Error("Customer not found")
+
+      await tx.update(customer)
+        .set({
+          ledger: cust.ledger + totalprice
+        })
+        .where(eq(customer.id, allUdharData.customerId))
+
+      await tx.update(inventory)
+        .set({
+          stock: sql`${inventory.stock} - ${allUdharData.qty}`
+        })
+        .where(eq(inventory.id, allUdharData.inventoryId))
+
+      return newUdhar
+    })
+
+    return { success: true, data: result }
+
   } catch (error) {
-    if (error instanceof Error) {
-      return { message: error.message, success: false };
-    } else {
-      return { message: "Some internal server error", success: false };
-    }
+    return { success: false, message: "Failed to add udhar" }
   }
-};
+}
 
 export const updateUdhar = async (data: UdharInput) => {
-  try {
-    const udharId = data.id;
+try{
+ const result = await db.transaction( async(tx)=>{
+  const existing = await tx.query.udhar.findFirst({
+    where:(u,{eq})=>eq(u.id,data.id)
+  })
 
-    const existing = await db
-      .select()
-      .from(udhar)
-      .where(eq(udhar.id, udharId))
-      .limit(1);
+  if(!existing){
+    return new Error("udhar not found") 
+  }
+   const newQty = data.qty ?? existing.qty;
+      const newPrice = data.price ?? existing.price;
+      const newTotal = newQty * newPrice;
 
-    if (!existing.length) {
-      return { success: false, message: "Udhar not found" };
-    }
+     const ledgerDiff = newTotal - existing.totalprice;
+      const qtyDiff = newQty - existing.qty;
+ const productRes = await tx.query.inventory.findFirst({
+  where:(i,{eq})=>eq(i.id,data.inventoryId)
+ }) 
+ const newProductName = productRes?.productName;
+    const updated = await tx
+        .update(udhar)
+        .set({
+          qty: newQty,
+          price: newPrice,
+          totalprice: newTotal,
+          date: data.date ?? existing.date,
+          productName:newProductName?? existing.productName,
+        })
+        .where(eq(udhar.id, data.id))
+        .returning();
+  await tx
+        .update(customer)
+        .set({
+          ledger: sql`${customer.ledger} + ${ledgerDiff}`,
+        })
+        .where(eq(customer.id, existing.customerId));
 
-    const debt = await db.query.customer.findFirst({
-      where: (customer, { eq }) => eq(customer.id, data.customerId),
+      await tx
+        .update(inventory)
+        .set({
+          stock: sql`${inventory.stock} - ${qtyDiff}`,
+        })
+        .where(eq(inventory.id, existing.inventoryId));
+
+      return updated;
     });
-
-    if (!debt) {
-      return { success: false, message: "Customer not found" };
-    }
-
-    // calculate new ledger
-    const newLedger = debt.ledger - data.prev + (data.totalprice ?? 0);
-
-    const updated = await db
-      .update(udhar)
-      .set({
-        totalprice: data.totalprice,
-        product: data.product,
-        qty: data.qty,
-        price: data.price,
-        date: data.date,
-      })
-      .where(eq(udhar.id, udharId))
-      .returning();
-    await db
-      .update(customer)
-      .set({ ledger: newLedger })
-      .where(eq(customer.id, data.customerId));
 
     return {
       success: true,
       message: "Udhar updated successfully",
-      data: updated,
+      data: result,
     };
-  } catch (error) {
+} catch (error) {
     if (error instanceof Error) {
       return { message: error.message, success: false };
     }
@@ -138,36 +159,55 @@ export const getUdhar = async (customerId: string) => {
     }
   }
 };
-export const deleteUdhar = async (allUdharId: string) => {
+export const deleteUdhar = async (udharId: string) => {
   try {
-    const existing = await db.query.udhar.findFirst({
-      where: (u, { eq }) => eq(u.id, allUdharId),
-    });
 
-    if (!existing) {
-      return { success: false, message: "Udhar not found" };
-    }
+    const result = await db.transaction(async (tx) => {
 
-    const cust = await db.query.customer.findFirst({
-      where: (c, { eq }) => eq(c.id, existing.customerId),
-    });
+      const existing = await tx.query.udhar.findFirst({
+        where: (u, { eq }) => eq(u.id, udharId),
+      });
 
-    if (cust) {
-      const newLedger = cust.ledger - existing.totalprice;
+      if (!existing) {
+        throw new Error("Udhar not found");
+      }
 
-      await db
+      // return stock
+      await tx
+        .update(inventory)
+        .set({
+          stock: sql`${inventory.stock} + ${existing.qty}`,
+        })
+        .where(eq(inventory.id, existing.inventoryId));
+
+      // reduce customer ledger
+      await tx
         .update(customer)
-        .set({ ledger: newLedger })
+        .set({
+          ledger: sql`${customer.ledger} - ${existing.totalprice}`,
+        })
         .where(eq(customer.id, existing.customerId));
-    }
 
-    await db.delete(udhar).where(eq(udhar.id, allUdharId));
-    return { success: true, message: "deleted sucessfully" };
+      // delete udhar
+      await tx.delete(udhar).where(eq(udhar.id, udharId));
+
+      return existing;
+    });
+
+    return {
+      success: true,
+      message: "Udhar deleted successfully",
+      data: result,
+    };
+
   } catch (error) {
     if (error instanceof Error) {
-      return { message: error.message, success: false };
-    } else {
-      return { message: "Some internal server error", success: false };
+      return { success: false, message: error.message };
     }
+
+    return {
+      success: false,
+      message: "Internal server error",
+    };
   }
 };

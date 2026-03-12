@@ -9,25 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Pencil, Trash2 } from "lucide-react"
-import { Button } from "../ui/button"
-import { deleteProduct, updateinventory } from "@/server-actions/inventory"
-import EditPage from "./EditPage"
+import { getAllProduct } from "@/server-actions/inventory"
 
-type Product = {
-  id: string
-  userId: string
-  productName: string
-  stock: number
-  price: number
-}
 
-function ProductTable({ data }: { data: Product[] }) {
+ const allProduct = await getAllProduct();
+  const data = allProduct.data ?? [];
 
-  const total = data.reduce((sum, item) => sum + item.price, 0)
-
+const inventory = () => {
   return (
-    <div className="m-4 mt-6 max-w-7xl  border-2 p-3 rounded-3xl">
       <Table >
         <TableCaption>A list of your recent products.</TableCaption>
 
@@ -51,26 +40,15 @@ function ProductTable({ data }: { data: Product[] }) {
               <TableCell>
                 ₹{item.price}
               </TableCell>
-             <TableCell className="flex gap-2">
-               <span><Button onClick={()=>deleteProduct(item.id.toString())} ><Trash2/></Button></span>
-<EditPage item={item}/>
-              </TableCell>
+             
             </TableRow>
           ))}
         </TableBody>
 
-        <TableFooter>
-          <TableRow>
-            <TableCell colSpan={3}>Total</TableCell>
-            <TableCell className="font-bold" >
-              ₹{total}
-            </TableCell>
-          </TableRow>
-        </TableFooter>
+      
 
       </Table>
-    </div>
   )
 }
 
-export default ProductTable
+export default inventory
