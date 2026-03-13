@@ -1,213 +1,228 @@
 "use server";
-
 import { db } from "@/db";
-import { customer, inventory, udhar } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { inventory, bill, udhar, customer } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
-import { headers } from "next/headers";
-type UdharInput = {
-  id: string;
-  customerId: string;
+type BillItem = {
   inventoryId: string;
-  qty?: number;
-  price?: number;
-  totalprice?: number;
-  date?: Date;
-};
-
-type debt = {
-  customerId: string;
-  product: string;
   qty: number;
   price: number;
-  inventoryId:string;
-  totalprice: number;
 };
 
-export const getUser = async () => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
-  return session.user.id;
+type CreateBillInput = {
+  customerId: string;
+  items: BillItem[];
 };
 
-export const addUdhar = async ({ allUdharData }: { allUdharData: debt }) => {
+type UpdateBillInput = {
+  billId: string;
+  items: BillItem[];
+};export const getInventory = async () => {
+  return await db.select().from(inventory).where(sql`${inventory.stock} > 0`);
+};
+export const createBill = async (data: CreateBillInput) => {
   try {
-
     const result = await db.transaction(async (tx) => {
+      let total: number = 0;
 
-      const totalprice = allUdharData.qty * allUdharData.price
- const item = await tx.query.inventory.findFirst({
-          where: (i,{ eq }) => eq(i.id, allUdharData.inventoryId)
+      for (const item of data.items) {
+        total += item.qty * item.price;
+      }
 
- })
-      const newUdhar = await tx.insert(udhar)
+      const [newBill] = await tx
+        .insert(bill)
         .values({
-          ...allUdharData,
-          productName:item?.productName,
-          totalprice,
-          date: new Date()
+          customerId: data.customerId,
+          total,
         })
-        .returning()
-
-      const cust = await tx.query.customer.findFirst({
-        where: (c, { eq }) => eq(c.id, allUdharData.customerId)
-      })
-
-      if (!cust) throw new Error("Customer not found")
-
-      await tx.update(customer)
-        .set({
-          ledger: cust.ledger + totalprice
-        })
-        .where(eq(customer.id, allUdharData.customerId))
-
-      await tx.update(inventory)
-        .set({
-          stock: sql`${inventory.stock} - ${allUdharData.qty}`
-        })
-        .where(eq(inventory.id, allUdharData.inventoryId))
-
-      return newUdhar
-    })
-
-    return { success: true, data: result }
-
-  } catch (error) {
-    return { success: false, message: "Failed to add udhar" }
-  }
-}
-
-export const updateUdhar = async (data: UdharInput) => {
-try{
- const result = await db.transaction( async(tx)=>{
-  const existing = await tx.query.udhar.findFirst({
-    where:(u,{eq})=>eq(u.id,data.id)
-  })
-
-  if(!existing){
-    return new Error("udhar not found") 
-  }
-   const newQty = data.qty ?? existing.qty;
-      const newPrice = data.price ?? existing.price;
-      const newTotal = newQty * newPrice;
-
-     const ledgerDiff = newTotal - existing.totalprice;
-      const qtyDiff = newQty - existing.qty;
- const productRes = await tx.query.inventory.findFirst({
-  where:(i,{eq})=>eq(i.id,data.inventoryId)
- }) 
- const newProductName = productRes?.productName;
-    const updated = await tx
-        .update(udhar)
-        .set({
-          qty: newQty,
-          price: newPrice,
-          totalprice: newTotal,
-          date: data.date ?? existing.date,
-          productName:newProductName?? existing.productName,
-        })
-        .where(eq(udhar.id, data.id))
         .returning();
-  await tx
+
+      for (const item of data.items) {
+        const inventoryItem = await tx.query.inventory.findFirst({
+          where: (i, { eq }) => eq(i.id, item.inventoryId),
+        });
+        if (!inventoryItem) {
+          return { success: false, message: "can't find the item" };
+        }
+
+        const totalprice = item.qty * item.price;
+
+        await tx.insert(udhar).values({
+          inventoryId: item.inventoryId,
+          billId: newBill.id,
+          date: newBill.date,
+          qty: item.qty,
+          productName: inventoryItem.productName,
+          price: item.price,
+          totalprice,
+        });
+       await tx
+  .update(inventory)
+  .set({
+    stock: sql`${inventory.stock} - ${item.qty}`,
+  })
+  .where(eq(inventory.id, item.inventoryId));
+        
+      }await tx
+          .update(customer)
+          .set({
+            ledger: sql`${customer.ledger}+${total}`,
+          })
+          .where(eq(customer.id, data.customerId));
+    });
+    return {
+      success: true,
+      data: result,
+    };
+  } catch (error) {
+    error instanceof Error
+      ? console.log(error.message)
+      : console.log("fail to create");
+  }
+};
+
+export const editBill = async (data: UpdateBillInput) => {
+  try {
+    await db.transaction(async (tx) => {
+
+      const existingBill = await tx.query.bill.findFirst({
+        where: (b, { eq }) => eq(b.id, data.billId),
+      });
+
+      if (!existingBill) throw new Error("Bill not found");
+
+      const oldItems = await tx.query.udhar.findMany({
+        where: (u, { eq }) => eq(u.billId, data.billId),
+      });
+
+      for (const item of oldItems) {
+        await tx
+          .update(inventory)
+          .set({
+            stock: sql`${inventory.stock} + ${item.qty}`,
+          })
+          .where(eq(inventory.id, item.inventoryId));
+      }
+
+      await tx.delete(udhar).where(eq(udhar.billId, data.billId));
+
+      let newTotal = 0;
+
+      for (const item of data.items) {
+        const product = await tx.query.inventory.findFirst({
+          where: (i, { eq }) => eq(i.id, item.inventoryId),
+        });
+
+        if (!product) throw new Error("Product not found");
+
+        const totalprice = item.qty * item.price;
+        newTotal += totalprice;
+
+        await tx.insert(udhar).values({
+          billId: data.billId,
+          inventoryId: item.inventoryId,
+          productName: product.productName,
+          price: item.price,
+          qty: item.qty,
+          totalprice,
+          date: existingBill.date,
+        });
+
+        await tx
+          .update(inventory)
+          .set({
+            stock: sql`${inventory.stock} - ${item.qty}`,
+          })
+          .where(eq(inventory.id, item.inventoryId));
+      }
+
+      const ledgerDiff = newTotal - existingBill.total;
+
+      
+      await tx
+        .update(bill)
+        .set({
+          total: newTotal,
+        })
+        .where(eq(bill.id, data.billId));
+
+      await tx
         .update(customer)
         .set({
           ledger: sql`${customer.ledger} + ${ledgerDiff}`,
         })
-        .where(eq(customer.id, existing.customerId));
-
-      await tx
-        .update(inventory)
-        .set({
-          stock: sql`${inventory.stock} - ${qtyDiff}`,
-        })
-        .where(eq(inventory.id, existing.inventoryId));
-
-      return updated;
+        .where(eq(customer.id, existingBill.customerId));
     });
 
-    return {
-      success: true,
-      message: "Udhar updated successfully",
-      data: result,
-    };
-} catch (error) {
-    if (error instanceof Error) {
-      return { message: error.message, success: false };
-    }
-    return { message: "Some internal server error", success: false };
-  }
-};
+    return { success: true };
 
-export const getUdhar = async (customerId: string) => {
-  try {
-    const readUser = await db
-      .select()
-      .from(udhar)
-      .where(eq(udhar.customerId, customerId));
-
-    return { success: true, data: readUser };
   } catch (error) {
-    if (error instanceof Error) {
-      return { message: error.message, success: false };
-    } else {
-      return { message: "Some internal server error", success: false };
-    }
+    error instanceof Error
+      ? console.log(error.message)
+      : console.log("fail to edit");
   }
 };
-export const deleteUdhar = async (udharId: string) => {
+export const deleteBill = async (billId: string) => {
   try {
-
-    const result = await db.transaction(async (tx) => {
-
-      const existing = await tx.query.udhar.findFirst({
-        where: (u, { eq }) => eq(u.id, udharId),
+    await db.transaction(async (tx) => {
+      const existingBill = await tx.query.bill.findFirst({
+        where: (b, { eq }) => eq(b.id, billId),
       });
 
-      if (!existing) {
-        throw new Error("Udhar not found");
+      if (!existingBill) throw new Error("Bill not found");
+
+      const items = await tx.query.udhar.findMany({
+        where: (u, { eq }) => eq(u.billId, billId),
+      });
+
+      for (const item of items) {
+        await tx
+          .update(inventory)
+          .set({
+            stock: sql`${inventory.stock} + ${item.qty}`,
+          })
+          .where(eq(inventory.id, item.inventoryId));
       }
 
-      // return stock
-      await tx
-        .update(inventory)
-        .set({
-          stock: sql`${inventory.stock} + ${existing.qty}`,
-        })
-        .where(eq(inventory.id, existing.inventoryId));
-
-      // reduce customer ledger
       await tx
         .update(customer)
         .set({
-          ledger: sql`${customer.ledger} - ${existing.totalprice}`,
+          ledger: sql`${customer.ledger} - ${existingBill.total}`,
         })
-        .where(eq(customer.id, existing.customerId));
+        .where(eq(customer.id, existingBill.customerId));
 
-      // delete udhar
-      await tx.delete(udhar).where(eq(udhar.id, udharId));
+      await tx.delete(udhar).where(eq(udhar.billId, billId));
 
-      return existing;
+      await tx.delete(bill).where(eq(bill.id, billId));
     });
 
-    return {
-      success: true,
-      message: "Udhar deleted successfully",
-      data: result,
-    };
-
+    return { success: true };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, message: error.message };
-    }
-
-    return {
-      success: false,
-      message: "Internal server error",
-    };
+    error instanceof Error
+      ? console.log(error.message)
+      : console.log("fail to delete");
   }
+};
+export const getCustomerBills = async (customerId: string) => {
+  const rows = await db
+    .select({
+      bill: bill,
+      udhar: udhar,
+    })
+    .from(bill)
+    .leftJoin(udhar, eq(bill.id, udhar.billId))
+    .where(eq(bill.customerId, customerId));
+
+  // Since a join returns one row per item, we group them by bill ID
+  const groupedBills = rows.reduce((acc: any, row) => {
+    const billId = row.bill.id;
+    if (!acc[billId]) {
+      acc[billId] = { ...row.bill, udhar: [] };
+    }
+    if (row.udhar) {
+      acc[billId].udhar.push(row.udhar);
+    }
+    return acc;
+  }, {});
+
+  return Object.values(groupedBills);
 };
