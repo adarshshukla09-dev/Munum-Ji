@@ -39,6 +39,12 @@ export const createAllPaymentLinks = async () => {
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
+      mode: "payment",
+
+      metadata: {
+        customerId: c.id,
+      },
+
       line_items: [
         {
           price_data: {
@@ -51,8 +57,8 @@ export const createAllPaymentLinks = async () => {
           quantity: 1,
         },
       ],
-      mode: "payment",
-      success_url: `${process.env.NEXT_BASE_URL}/success?customer_id=${c.id}`,
+
+      success_url: `${process.env.NEXT_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_BASE_URL}/cancel`,
     });
 
@@ -66,6 +72,7 @@ export const createAllPaymentLinks = async () => {
       name: c.name,
       phone,
       whatsappLink,
+      paymentUrl: session.url,
     });
   }
 
