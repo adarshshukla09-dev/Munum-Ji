@@ -4,11 +4,15 @@ import {
   text,
   timestamp,
   boolean,
-  index,
+  index,pgEnum,
   uuid,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "payment",
+  "inventory",
+]);
 export const customer = pgTable("customer", {
   id: uuid().defaultRandom().primaryKey(),
   userId: text("user_id")
@@ -68,6 +72,19 @@ export const payments = pgTable("payments", {
     .references(() => customer.id, { onDelete: "cascade" }),
 
   amount: integer("amount").notNull(),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export const notifications = pgTable("notifications", {
+  id: uuid().defaultRandom().primaryKey(),
+
+  name:text("name").notNull(),
+
+  type: notificationTypeEnum("type").notNull(), 
+
+  message: text("message").notNull(),
+
+  isRead: boolean("is_read").default(false).notNull(),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

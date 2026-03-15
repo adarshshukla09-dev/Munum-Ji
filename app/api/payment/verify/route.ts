@@ -1,6 +1,8 @@
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import { saveDebtToDetails } from "@/server-actions/payment";
+import { addNotification } from "@/server-actions/notifications";
+import { db } from "@/db";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -37,6 +39,24 @@ export async function POST(req: Request) {
     customerId,
     amount,
   });
+ 
+
+    const customer = await db.query.customer.findFirst({
+      where: (c, { eq }) => eq(c.id, customerId),
+    });
+
+    if (!customer) {
+      return;
+    }
+
+    const newNoti = await addNotification({
+      name: customer.name,
+      type: "payment",
+      message: `Payment received from ${customer.name}`,
+    });
+
+    return newNoti;
+
 
   return NextResponse.json({
     success: true,

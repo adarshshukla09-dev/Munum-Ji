@@ -13,6 +13,9 @@ import { Pencil, Trash2 } from "lucide-react"
 import { Button } from "../ui/button"
 import { deleteProduct, updateinventory } from "@/server-actions/inventory"
 import EditPage from "./EditPage"
+import { addNotification } from "@/server-actions/notifications"
+import { toast } from "sonner"
+import { useEffect } from "react"
 
 type Product = {
   id: string
@@ -21,9 +24,23 @@ type Product = {
   stock: number
   price: number
 }
+const addnoti = async(name:string)=>{
+  const newNoti = await addNotification({
+    name:name,
+    type:"inventory",
+    message:"you have less stock ,only 5 are remaing "
 
+  })
+  toast.error(`few stock of ${name}`)
+}
 function ProductTable({ data }: { data: Product[] }) {
-
+useEffect(() => {
+  data.forEach((item) => {
+    if (item.stock <= 5) {
+      addnoti(item.productName)
+    }
+  })
+}, [data])
   const total = data.reduce((sum, item) => sum + item.price, 0)
 
   return (
