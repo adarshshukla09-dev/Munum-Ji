@@ -63,9 +63,7 @@ export default function Admin({ adminInfo, data, pay }: AdminProps) {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold tracking-tight">Admin Overview</h1>
           <div className="flex gap-3">
-            <Button variant="outline" size="icon">
-              <Bell size={20} />
-            </Button>
+           
             <Link href="/Debts">
               <Button>+ New Transaction</Button>
             </Link>
@@ -95,7 +93,7 @@ export default function Admin({ adminInfo, data, pay }: AdminProps) {
 
           <StatCard
             title="Remaining Balance"
-            value={adminInfo.remaining}
+            value={adminInfo?.remaining }
             icon={<Wallet className="text-blue-500" />}
           />
         </div>
@@ -147,7 +145,7 @@ export default function Admin({ adminInfo, data, pay }: AdminProps) {
                 <TableBody>
                   {pay.map((item,i)=>(
 
-                  <TableRow>
+                  <TableRow key={item.customerName}>
                     <TableCell className="font-medium">{item.customerName}</TableCell>
                     <TableCell>
                     {item.date.toLocaleDateString()}
@@ -181,7 +179,7 @@ function StatCard({
         {icon}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-2xl font-bold">{value.toLocaleString()}</div>
       </CardContent>
     </Card>
   );

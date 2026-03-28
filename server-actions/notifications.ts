@@ -1,7 +1,7 @@
+"use server"
 import { db } from "@/db";
 import { notifications } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { success } from "zod";
 
 type Data = {
   name: string;

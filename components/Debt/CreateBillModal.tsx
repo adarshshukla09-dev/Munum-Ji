@@ -79,7 +79,11 @@ export default function CreateBillModal({
           <Plus size={18} /> New Bill
         </Button>
       </DialogTrigger>
-<DialogContent className="sm:max-w-[90vw] lg:max-w-250 w-full h-[85vh] flex flex-row gap-0 p-0 overflow-hidden rounded-3xl border-none shadow-2xl">        {/* Left Pane: Inventory */}
+<DialogContent className="sm:max-w-[90vw] lg:max-w-250 w-full h-[85vh] flex flex-row gap-0 p-0 overflow-hidden rounded-3xl border-none shadow-2xl"> 
+  <DialogHeader>
+    <DialogTitle/>
+  </DialogHeader>
+         {/* Left Pane: Inventory */}
         <div className="w-1/2 flex flex-col border-r bg-white p-6">
           <div className="flex items-center gap-2 mb-6">
             <Package className="text-blue-600" />

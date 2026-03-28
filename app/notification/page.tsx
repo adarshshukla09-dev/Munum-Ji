@@ -36,7 +36,8 @@ export default function NotificationList() {
   if (loading) return <div className="p-4 text-gray-500">Loading alerts...</div>;
 
   return (
-    <div className="max-w-md mx-auto mt-10 space-y-3">
+    <div className="min-h-screen bg-gray-50 pt-28 pb-16">
+      <div className="max-w-7xl mx-auto px-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold flex items-center gap-2">
           <Bell className="w-5 h-5" /> Notifications
@@ -83,6 +84,7 @@ export default function NotificationList() {
           </div>
         ))
       )}
+    </div>
     </div>
   );
 }

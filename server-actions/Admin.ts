@@ -9,7 +9,6 @@ type ChartData = {
   udhar: number
   paid: number
 }
-
 export const AdminInfo = async () => {
   try {
     const totalCustomer = await db
@@ -17,7 +16,9 @@ export const AdminInfo = async () => {
         totalLedger: sum(customer.ledger),
       })
       .from(customer);
-const consumer =await db.select().from(customer)
+
+    const consumer = await db.select().from(customer);
+
     const totalDebt = await db
       .select({
         totalDebt: sum(bill.total),
@@ -29,17 +30,20 @@ const consumer =await db.select().from(customer)
         totalRecovery: sum(payments.amount),
       })
       .from(payments);
-const totalDebtAmount = totalDebt?.[0] || 0;
-const totalRecoveryAmount = totalRecovery?.[0] || 0;
 
-const remaining = Number(totalDebtAmount) - Number(totalRecoveryAmount);
-console.log(consumer.length)
+    // ✅ Extract + convert properly
+    const totalLedger = Number(totalCustomer[0]?.totalLedger ?? 0);
+    const totalDebtAmount = Number(totalDebt[0]?.totalDebt ?? 0);
+    const totalRecoveryAmount = Number(totalRecovery[0]?.totalRecovery ?? 0);
+
+    const remaining = totalDebtAmount - totalRecoveryAmount;
+
     return {
-      totalCusumer:consumer?.length,
-      totalLedger: totalCustomer[0]?.totalLedger ?? 0,
-      totalDebt: totalDebt[0]?.totalDebt ?? 0,
-      totalRecovery: totalRecovery[0]?.totalRecovery ?? 0,
-      remaining:Number(remaining),
+      totalCusumer: consumer.length,
+      totalLedger,
+      totalDebt: totalDebtAmount,
+      totalRecovery: totalRecoveryAmount,
+      remaining,
     };
   } catch (error) {
     console.error(error);

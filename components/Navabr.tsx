@@ -79,6 +79,7 @@ const [notiLength,setNotiLength]=useState<number>(0)
 
         {/* Right: Actions & Profile */}
         <div className="flex items-center gap-2">
+          <Link href="/notification">
           <Button variant="ghost" size="icon" className="relative rounded-full h-9 w-9">
   <Bell className="h-4 w-4" />
   {notiLength > 0 && (
@@ -87,6 +88,7 @@ const [notiLength,setNotiLength]=useState<number>(0)
     </span>
   )}
 </Button>
+  </Link>
 
           {  user &&     <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -14,6 +14,7 @@ export default async function Home() {
       }
         const data = await getMonthlyLedgerData()
       const admin = await AdminInfo()
+      
       const pay = await paymentinfo()
       console.log(data)
       console.log(admin)
@@ -21,8 +22,7 @@ if (!pay) return null;
   return (
    <div className="min-h-screen bg-gray-50 pt-28 pb-16">
       <div className="max-w-7xl mx-auto px-6">
-    welcome
-  <AdminPage adminInfo={admin} data={data} pay={pay.data} />
+\  <AdminPage adminInfo={admin} data={data} pay={pay.data} />
    </div>
    </div>
   );
