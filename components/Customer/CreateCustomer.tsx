@@ -52,7 +52,7 @@ const user = await createCustomer({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
      
         <DialogTrigger asChild>
-      <Button>Add<span><PlusCircle/></span></Button>
+      <Button>Add new customer <span><PlusCircle/></span></Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
