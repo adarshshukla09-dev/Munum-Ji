@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navabr";
+import Navbar from "@/components/others/Navabr";
 import { Toaster } from "sonner";
+import TranscationButton from "@/components/others/TranscationButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +33,7 @@ export default function RootLayout({
         <Navbar/>
         {children}
         <Toaster position="top-center"/>
+        <TranscationButton/>
       </body>
     </html>
   );
