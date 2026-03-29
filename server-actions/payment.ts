@@ -1,6 +1,7 @@
 import { db } from "@/db";
-import { customer, payments } from "@/db/schema";
+import { customer, paymentLP, paymentMethodEnum, payments } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { pgEnum, PgEnum } from "drizzle-orm/pg-core";
 
 type PaymentInput = {
   customerId: string;
@@ -41,3 +42,4 @@ export const saveDebtToDetails = async (data: PaymentInput) => {
     return { success: false };
   }
 };
+
