@@ -75,6 +75,7 @@ export const payments = pgTable("payments", {
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
 export const notifications = pgTable("notifications", {
   id: uuid().defaultRandom().primaryKey(),
 
@@ -87,4 +88,24 @@ export const notifications = pgTable("notifications", {
   isRead: boolean("is_read").default(false).notNull(),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export const paymentMethodEnum = pgEnum("payment_method", ["CASH", "CARD"]);
+
+export const paymentLP= pgTable("payments", {
+  id: uuid().defaultRandom().primaryKey(),
+
+  method:  paymentMethodEnum("method").notNull(),
+  amount: integer("amount").notNull(),
+  status: text("status", {
+    enum: ["pending", "success", "failed"]
+  }).default("pending"),
+
+shopkeeperId: uuid("shopkeeper_id")
+  .notNull()
+  .references(() => user.id, { onDelete: "cascade" }),
+   stripeSessionId: text("stripe_session_id"),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
