@@ -6,66 +6,85 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getInventory, createBill } from "@/server-actions/debt";
+import { getInventory } from "@/server-actions/debt";
+// Import your Stripe action
 import { Search, ShoppingCart, Plus, X, Package } from "lucide-react";
-import { toast } from "sonner";
 import CreateDebt from "./CreateDebt";
+import { PaymentQRDialog } from "./PayNow";
+import { createCheckoutSession } from "@/server-actions/whatsapp";
+import { createAuthClient } from "better-auth/react";
 
-function Cart({ open, setOpen }:{open:boolean, setOpen: (v: boolean) => void;})  {
+function Cart({
+  open,
+  setOpen,
+}: {
+  open: boolean;
+  setOpen: (v: boolean) => void;
+}) {
+  const authClient = createAuthClient();
+const { useSession } = authClient;
+  const [inventory, setInventory] = useState<any[]>([]);
+  const[loading,setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [cart, setCart] = useState<any[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
 
-    const [inventory, setInventory] = useState<any[]>([]);
-    const [search, setSearch] = useState("");
-    const [cart, setCart] = useState<any[]>([]);
 
-  
-    useEffect(() => {
-      if (open) getInventory().then(setInventory);
-    }, [open]);
-  
-    const addToCart = (item: any) => {
-      setCart((prev) => {
-        const existing = prev.find((i) => i.inventoryId === item.id);
-        if (existing)
-          return prev.map((i) =>
-            i.inventoryId === item.id ? { ...i, qty: i.qty + 1 } : i,
-          );
-        return [
-          ...prev,
-          {
-            inventoryId: item.id,
-            productName: item.productName,
-            qty: 1,
-            price: item.price,
-          },
-        ];
-      });
-    };
-  
-    const updateQty = (id: string, delta: number) => {
-      setCart((prev) =>
-        prev.map((i) =>
-          i.inventoryId === id ? { ...i, qty: Math.max(1, i.qty + delta) } : i,
-        ),
-      );
-    };
-  
+// const { data: session, isPending } = authClient.useSession();
 
-    const filteredItems = inventory.filter((i) =>
-      i.productName.toLowerCase().includes(search.toLowerCase()),
+
+  // if(session?.user?.id){setUserId(session.user.id)}
+
+
+  // 2. Fetch Inventory when dialog opens
+  useEffect(() => {
+    if (open) {
+      getInventory().then(setInventory);
+    }
+  }, [open]);
+
+  const addToCart = (item: any) => {
+    setCart((prev) => {
+      const existing = prev.find((i) => i.inventoryId === item.id);
+      if (existing)
+        return prev.map((i) =>
+          i.inventoryId === item.id ? { ...i, qty: i.qty + 1 } : i,
+        );
+      return [
+        ...prev,
+        {
+          inventoryId: item.id,
+          productName: item.productName,
+          qty: 1,
+          price: item.price,
+        },
+      ];
+    });
+  };
+
+  const updateQty = (id: string, delta: number) => {
+    setCart((prev) =>
+      prev.map((i) =>
+        i.inventoryId === id ? { ...i, qty: Math.max(1, i.qty + delta) } : i,
+      ),
     );
-  
+  };
+
+  const filteredItems = inventory.filter((i) =>
+    i.productName.toLowerCase().includes(search.toLowerCase()),
+  );
+
   return (
-     <Dialog open={open} onOpenChange={setOpen}>
-     
-<DialogContent className="sm:max-w-[90vw] lg:max-w-250 w-full h-[85vh] flex flex-row gap-0 p-0 overflow-hidden rounded-3xl border-none shadow-2xl"> 
-  <DialogHeader>
-    <DialogTitle/>
-  </DialogHeader>
-         {/* Left Pane: Inventory */}
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="sm:max-w-[90vw] lg:max-w-250 w-full h-[85vh] flex flex-row gap-0 p-0 overflow-hidden rounded-3xl border-none shadow-2xl">
+        <DialogHeader className="hidden">
+          <DialogTitle>Cart</DialogTitle>
+        </DialogHeader>
+
+        {/* Left Pane: Inventory */}
         <div className="w-1/2 flex flex-col border-r bg-white p-6">
           <div className="flex items-center gap-2 mb-6">
             <Package className="text-blue-600" />
@@ -111,6 +130,7 @@ function Cart({ open, setOpen }:{open:boolean, setOpen: (v: boolean) => void;}) 
             <ShoppingCart />
             <h2 className="text-xl font-bold">New Bill Items</h2>
           </div>
+
           <div className="flex-1 overflow-y-auto space-y-3">
             {cart.map((item) => (
               <div
@@ -130,19 +150,19 @@ function Cart({ open, setOpen }:{open:boolean, setOpen: (v: boolean) => void;}) 
                 <div className="flex items-center gap-3">
                   <div className="flex items-center bg-slate-100 rounded-full p-1 border border-slate-200">
                     <button
-                      className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white hover:shadow-sm transition-all"
                       onClick={() => updateQty(item.inventoryId, -1)}
+                      className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white transition-all"
                     >
-                      <span className="font-bold text-slate-600">-</span>
+                      -
                     </button>
-                    <span className="px-3 text-xs font-black text-slate-800 min-w-8 text-center">
+                    <span className="px-3 text-xs font-black text-slate-800">
                       {item.qty}
                     </span>
                     <button
-                      className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white hover:shadow-sm transition-all"
                       onClick={() => updateQty(item.inventoryId, 1)}
+                      className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white transition-all"
                     >
-                      <span className="font-bold text-slate-600">+</span>
+                      +
                     </button>
                   </div>
                   <Button
@@ -163,30 +183,30 @@ function Cart({ open, setOpen }:{open:boolean, setOpen: (v: boolean) => void;}) 
           </div>
 
           <div className="mt-auto bg-white p-6 rounded-3xl border border-slate-200 shadow-xl">
-            <div className="space-y-2 mb-6">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-900 font-bold">Grand Total</span>
-                <span className="text-3xl font-black text-slate-900 tracking-tighter">
-                  ₹
-                  {cart
-                    .reduce((s, i) => s + i.qty * i.price, 0)
-                    .toLocaleString()}
-                </span>
-              </div>
+            <div className="flex justify-between items-center mb-6">
+              <span className="text-slate-900 font-bold">Grand Total</span>
+              <span className="text-3xl font-black text-slate-900 tracking-tighter">
+                ₹
+                {cart.reduce((s, i) => s + i.qty * i.price, 0).toLocaleString()}
+              </span>
             </div>
 
-  
-            <Button
-              className="w-1/4 h-14 text-md font-black float-end bg-green-600 mx-3 hover:bg-green-700 text-white rounded-2xl shadow-[0_10px_20px_-10px_rgba(37,99,235,0.4)] transition-all"
-              >
-             paynow
-            </Button>
-            <CreateDebt cart={cart}/>
-              </div>
+            <div className="flex gap-2">
+              {/* Ensure userId exists before rendering to avoid errors */}
+              {userId && (
+                <PaymentQRDialog
+                  cart={cart}
+                  shopkeeperId={userId}
+                  createCheckoutSession={createCheckoutSession}
+                />
+              )}
+              <CreateDebt cart={cart} />
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
-export default Cart
+export default Cart;

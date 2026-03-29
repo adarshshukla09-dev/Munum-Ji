@@ -16,10 +16,12 @@ type CreateBillInput = {
 type UpdateBillInput = {
   billId: string;
   items: BillItem[];
-};export const getInventory = async () => {
+};
+export const getInventory = async () => {
   return await db.select().from(inventory).where(sql`${inventory.stock} > 0`);
 };
 export const createBill = async (data: CreateBillInput) => {
+  console.log(data)
   try {
     const result = await db.transaction(async (tx) => {
       let total: number = 0;
@@ -40,9 +42,9 @@ export const createBill = async (data: CreateBillInput) => {
         const inventoryItem = await tx.query.inventory.findFirst({
           where: (i, { eq }) => eq(i.id, item.inventoryId),
         });
-        if (!inventoryItem) {
-          return { success: false, message: "can't find the item" };
-        }
+       if (!inventoryItem) {
+  throw new Error("Can't find the item");
+}
 
         const totalprice = item.qty * item.price;
 
