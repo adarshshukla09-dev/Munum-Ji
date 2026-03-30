@@ -91,7 +91,7 @@ export const notifications = pgTable("notifications", {
 });
 export const paymentMethodEnum = pgEnum("payment_method", ["CASH", "CARD"]);
 
-export const paymentLP= pgTable("payments", {
+export const paymentLP= pgTable("paymentsLP", {
   id: uuid().defaultRandom().primaryKey(),
 
   method:  paymentMethodEnum("method").notNull(),
@@ -100,7 +100,7 @@ export const paymentLP= pgTable("payments", {
     enum: ["pending", "success", "failed"]
   }).default("pending"),
 
-shopkeeperId: uuid("shopkeeper_id")
+shopkeeperId: text("shopkeeper_id")
   .notNull()
   .references(() => user.id, { onDelete: "cascade" }),
    stripeSessionId: text("stripe_session_id"),
