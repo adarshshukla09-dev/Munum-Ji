@@ -32,7 +32,7 @@ export function PaymentQRDialog({ cart, shopkeeperId, createCheckoutSession }: P
   const [error, setError] = useState<string | null>(null);
 
   const totalAmount = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-
+console.log(shopkeeperId)
   const handleGenerateQR = async () => {
     setLoading(true);
     setError(null);

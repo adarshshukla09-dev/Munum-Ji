@@ -17,6 +17,7 @@ import { PaymentQRDialog } from "./PayNow";
 import { createCheckoutSession } from "@/server-actions/whatsapp";
 import { createAuthClient } from "better-auth/react";
 
+const authClient = createAuthClient();
 function Cart({
   open,
   setOpen,
@@ -24,20 +25,12 @@ function Cart({
   open: boolean;
   setOpen: (v: boolean) => void;
 }) {
-  const authClient = createAuthClient();
-const { useSession } = authClient;
+  const { data: session } = authClient.useSession();
   const [inventory, setInventory] = useState<any[]>([]);
   const[loading,setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<any[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
-
-
-// const { data: session, isPending } = authClient.useSession();
-
-
-  // if(session?.user?.id){setUserId(session.user.id)}
-
 
   // 2. Fetch Inventory when dialog opens
   useEffect(() => {
@@ -193,13 +186,13 @@ const { useSession } = authClient;
 
             <div className="flex gap-2">
               {/* Ensure userId exists before rendering to avoid errors */}
-              {userId && (
-                <PaymentQRDialog
-                  cart={cart}
-                  shopkeeperId={userId}
-                  createCheckoutSession={createCheckoutSession}
-                />
-              )}
+           {session?.user?.id && (
+  <PaymentQRDialog
+    cart={cart}
+    shopkeeperId={session.user.id}
+    createCheckoutSession={createCheckoutSession}
+  />
+)}
               <CreateDebt cart={cart} />
             </div>
           </div>

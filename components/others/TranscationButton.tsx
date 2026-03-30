@@ -1,8 +1,6 @@
 "use client"
 import { PlusIcon } from 'lucide-react'
-import Link from 'next/link'
 import React, { useState } from 'react'
-import CreateBillModal from '../Debt/CreateBillModal';
 import Cart from '../LivePurchase/Cart';
 import { Button } from '../ui/button';
 

@@ -49,9 +49,10 @@ export const createAllPaymentLinks = async () => {
       payment_method_types: ["card"],
       mode: "payment",
 
-      metadata: {
-        customerId: c.id,
-      },
+     metadata: {
+  customerId: c.id,
+  type: "ledger",
+},
 
       line_items: [
         {
@@ -119,10 +120,11 @@ export async function createCheckoutSession(
     payment_method_types: ["card"],
     line_items,
 
-    metadata: {
-      paymentId: payment.id,
-      shopkeeperId,
-    },
+   metadata: {
+  paymentId: payment.id,
+  shopkeeperId,
+  type: "direct", // ✅ ADD THIS
+},
 
     success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cancel`,
