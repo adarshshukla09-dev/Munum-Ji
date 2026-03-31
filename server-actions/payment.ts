@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { customer, paymentLP, paymentMethodEnum, payments } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { pgEnum, PgEnum } from "drizzle-orm/pg-core";
 
 type PaymentInput = {
@@ -11,7 +11,6 @@ type PaymentInput = {
 export const saveDebtToDetails = async (data: PaymentInput) => {
   try {
     const result = await db.transaction(async (tx) => {
-
       await tx.insert(payments).values({
         customerId: data.customerId,
         amount: data.amount,
@@ -43,3 +42,18 @@ export const saveDebtToDetails = async (data: PaymentInput) => {
   }
 };
 
+export const getallPaymentLP = async () => {
+  try {
+const allPayment = await db.select().from(paymentLP).orderBy(desc(paymentLP.createdAt));
+    const res = allPayment.map((data) => ({
+      method: data.method,
+      amount: data.amount,
+      status: data.status,
+      createdAt: data.createdAt,
+    }));
+    return res;
+  } catch (error) {
+    console.log(error);
+    return { success: false };
+  }
+};

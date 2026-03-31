@@ -186,6 +186,7 @@ function Cart({
 
             <div className="flex gap-2">
               {/* Ensure userId exists before rendering to avoid errors */}
+           
            {session?.user?.id && (
   <PaymentQRDialog
     cart={cart}

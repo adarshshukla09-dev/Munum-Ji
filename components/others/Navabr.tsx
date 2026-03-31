@@ -74,6 +74,15 @@ const [notiLength,setNotiLength]=useState<number>(0)
               Debts
             </Button>
           </Link>
+          <Link href="/live-sales">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-full hover:bg-white dark:hover:bg-slate-950 px-5 text-xs font-semibold"
+            >
+              live-sales
+            </Button>
+          </Link>
         
         </div>
 

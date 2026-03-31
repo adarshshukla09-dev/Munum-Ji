@@ -88,7 +88,23 @@ export const createAllPaymentLinks = async () => {
   return result;
 };
 
+export async function cashPayment( cartItems: CartItem[],
+  shopkeeperId: string,){
+  try {
+     if (!cartItems || cartItems.length === 0) {
+    throw new Error("Cart is empty");
+  }
 
+  const [payment] = await db.insert(paymentLP).values({
+    method:"CASH",
+    shopkeeperId,
+    amount: cartItems.reduce((sum, i) => sum + i.price * i.qty, 0),
+    status: "success",
+  }).returning();
+  } catch (error) {
+    console.log(error instanceof Error ? error.message : "something went wrong")
+  }
+}
 export async function createCheckoutSession(
   cartItems: CartItem[],
   shopkeeperId: string,

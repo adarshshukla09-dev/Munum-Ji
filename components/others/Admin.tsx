@@ -5,11 +5,9 @@ import {
   Wallet,
   ArrowUpRight,
   ArrowDownLeft,
-  LayoutDashboard,
   History,
-  Package,
   ShoppingCart,
-  Bell,
+  TrendingUp,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,153 +31,208 @@ import {
 } from "recharts";
 import Link from "next/link";
 
-type AdminProps = {
-  adminInfo: {
+export type AdminDashboardData = {
+  stats: {
     totalLedger: string | number;
     totalDebt: string | number;
     totalRecovery: string | number;
     remaining: number;
     totalCusumer: number;
   };
-  data: {
+  chartData: {
     name: string;
     udhar: number;
     paid: number;
   }[];
-  pay: {
+  debtPayments: {
     customerName: string | undefined;
     date: Date;
     amount: number;
   }[];
+  liveSales: {
+    method: "CASH" | "CARD";
+    amount: number;
+    status: "pending" | "success" | "failed" | null;
+    createdAt: Date;
+  }[];
 };
 
-export default function Admin({ adminInfo, data, pay }: AdminProps) {
-  return (
-    <div className="flex min-h-screen bg-slate-50">
-      {/* Sidebar Navigation */}
+export default function Admin({ dashboardData }: { dashboardData: AdminDashboardData }) {
+  const { stats, chartData, debtPayments, liveSales } = dashboardData;
 
-      {/* Main Content */}
-      <main className="flex-1 p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Admin Overview</h1>
-          <div className="flex gap-3">
-           
-            <Link href="/Debts">
-              <Button>+ New Transaction</Button>
-            </Link>
+  return (
+    <div className="min-h-screen bg-slate-50/50 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        
+        {/* --- HEADER --- */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Admin Overview</h1>
+            <p className="text-slate-500">Track your business credit and live sales in real-time.</p>
           </div>
+          <Link href="/Debts">
+            <Button className="bg-blue-600 hover:bg-blue-700 shadow-md">
+              + New Transaction
+            </Button>
+          </Link>
         </div>
 
-        {/* 1️⃣ Quick Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          {/* <StatCard title="Total Customers" value=`${adminInfo.}` icon={<Users className="text-muted-foreground"/>} /> */}
+        {/* --- 1. STATS CARDS --- */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total Udhar Given"
-            value={adminInfo.totalLedger}
+            value={stats.totalLedger}
             icon={<ArrowUpRight className="text-red-500" />}
           />
-
           <StatCard
-            title="Total Paid Amount"
-            value={adminInfo.totalRecovery}
-            icon={<ArrowDownLeft className="text-green-500" />}
+            title="Debt Recovered"
+            value={stats.totalRecovery}
+            icon={<ArrowDownLeft className="text-emerald-500" />}
           />
-
           <StatCard
-            title="Total Customer"
-            value={adminInfo.totalCusumer}
-            icon={<ArrowDownLeft className="text-green-500" />}
+            title="Total Customers"
+            value={stats.totalCusumer}
+            icon={<Users className="text-blue-500" />}
           />
-
           <StatCard
             title="Remaining Balance"
-            value={adminInfo?.remaining }
-            icon={<Wallet className="text-blue-500" />}
+            value={stats.remaining}
+            icon={<Wallet className="text-orange-500" />}
           />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-7">
-          {/* 6️⃣ Analytics Chart */}
-          <Card className="col-span-4">
-            <CardHeader>
-              <CardTitle>Monthly Recovery Rate</CardTitle>
-            </CardHeader>
-            <CardContent className="h-75">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar
-                    dataKey="udhar"
-                    fill="#ef4444"
-                    name="Udhar Given"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="paid"
-                    fill="#22c55e"
-                    name="Payment Received"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+        {/* --- 2. ANALYTICS CHART --- */}
+        <Card className="border-none shadow-sm ring-1 ring-slate-200">
+          <CardHeader className="flex flex-row items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <CardTitle>Recovery Analytics</CardTitle>
+          </CardHeader>
+          <CardContent className="h-[350px] pt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                <Tooltip 
+                  cursor={{fill: '#f1f5f9'}}
+                  contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'}}
+                />
+                <Bar
+                  dataKey="udhar"
+                  fill="#ef4444"
+                  name="Udhar Given"
+                  radius={[4, 4, 0, 0]}
+                  barSize={30}
+                />
+                <Bar
+                  dataKey="paid"
+                  fill="#10b981"
+                  name="Recovery"
+                  radius={[4, 4, 0, 0]}
+                  barSize={30}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
 
-          {/* 3️⃣ Recent Transactions */}
-          <Card className="col-span-3">
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
+        {/* --- 3. DUAL TABLES SECTION --- */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          
+          {/* DEBT PAYMENTS TABLE */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 px-1">
+              <History className="h-5 w-5 text-orange-600" />
+              <h2 className="text-xl font-semibold text-slate-800">Debt Received</h2>
+            </div>
+            <Card className="border-none shadow-sm ring-1 ring-slate-200 overflow-hidden">
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-slate-50/50">
                   <TableRow>
                     <TableHead>Customer</TableHead>
-                    <TableHead>data</TableHead>
+                    <TableHead>Date</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pay.map((item,i)=>(
-
-                  <TableRow key={item.customerName}>
-                    <TableCell className="font-medium">{item.customerName}</TableCell>
-                    <TableCell>
-                    {item.date.toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">₹{item.amount}</TableCell>
-                  </TableRow>
+                  {debtPayments.map((item, i) => (
+                    <TableRow key={i} className="hover:bg-slate-50/50 transition-colors">
+                      <TableCell className="font-medium text-slate-700">{item.customerName || "Walking Customer"}</TableCell>
+                      <TableCell className="text-slate-500 text-sm">
+                        {new Date(item.date).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-emerald-600">
+                        ₹{Number(item.amount).toLocaleString()}
+                      </TableCell>
+                    </TableRow>
                   ))}
                 </TableBody>
               </Table>
-            </CardContent>
-          </Card>
+            </Card>
+          </section>
+
+          {/* LIVE SALES TABLE */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 px-1">
+              <ShoppingCart className="h-5 w-5 text-blue-600" />
+              <h2 className="text-xl font-semibold text-slate-800">Live Purchases</h2>
+            </div>
+            <Card className="border-none shadow-sm ring-1 ring-slate-200 overflow-hidden">
+              <Table>
+                <TableHeader className="bg-slate-50/50">
+                  <TableRow>
+                    <TableHead>Method</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {liveSales.map((lp, i) => (
+                    <TableRow key={i} className="hover:bg-slate-50/50 transition-colors">
+                      <TableCell>
+                        <Badge 
+                          variant="secondary" 
+                          className={lp.method === "CARD" 
+                            ? "bg-blue-50 text-blue-700 border-blue-100" 
+                            : "bg-emerald-50 text-emerald-700 border-emerald-100"
+                          }
+                        >
+                          {lp.method}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`h-2 w-2 rounded-full ${lp.status === 'success' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                          <span className="text-xs font-medium capitalize text-slate-600">{lp.status || 'pending'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-slate-900">
+                        ₹{Number(lp.amount).toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </section>
+
         </div>
-      </main>
+      </div>
     </div>
   );
 }
 
-function StatCard({
-  title,
-  value,
-  icon,
-}: {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-}) {
+function StatCard({ title, value, icon }: { title: string; value: string | number; icon: React.ReactNode }) {
   return (
-    <Card>
+    <Card className="border-none shadow-sm ring-1 ring-slate-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon}
+        <CardTitle className="text-sm font-medium text-slate-500">{title}</CardTitle>
+        <div className="p-2 bg-slate-50 rounded-lg">{icon}</div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value.toLocaleString()}</div>
+        <div className="text-2xl font-bold text-slate-900">
+          ₹{Number(value).toLocaleString()}
+        </div>
       </CardContent>
     </Card>
   );
